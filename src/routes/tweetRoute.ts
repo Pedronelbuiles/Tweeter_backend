@@ -5,13 +5,18 @@ const router = Router()
 const prisma = new PrismaClient()
 
 router.get("/", async(req, res) => {
-    const allTweets = await prisma.tweet.findMany()
+    const allTweets = await prisma.tweet.findMany({
+        include: {user: {select: { id: true, name:true, username: true, image: true }}}
+    })
     res.json(allTweets)
 });
 
 router.get("/:id", async (req, res) => {
     const { id } = req.params
     const tweet = await prisma.tweet.findUnique({ where: { id: id } })
+    if (!tweet) {
+        return res.status(404).json({error: "Tweet not found"})
+    }
     res.json(tweet)
 });
 
@@ -22,7 +27,7 @@ router.post("/", async (req, res) => {
             data: {
                 content,
                 image,
-                userId
+                userId //TODO manage based on the auth user
             }
         })
         res.json(result)
