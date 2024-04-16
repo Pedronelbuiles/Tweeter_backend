@@ -6,13 +6,7 @@ const router = Router()
 const prisma = new PrismaClient()
 
 router.get("/", async (req, res) => {
-    const allUser = await prisma.user.findMany({
-        select: {
-            id: true,
-            name: true,
-            image: true
-        }
-    })
+    const allUser = await prisma.user.findMany()
     res.json(allUser)
 });
 
