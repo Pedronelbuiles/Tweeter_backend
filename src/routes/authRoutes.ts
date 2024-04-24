@@ -11,7 +11,7 @@ router.post('/login', async (req, res) => {
     const { email } = req.body
 
     const emailToken = generateEmailToken()
-    const expiration = new Date(new Date().getTime() +  EMAIL_TOKEN_EXPIRATION_MINUTES * 60 *100)
+    const expiration = new Date(new Date().getTime() +  EMAIL_TOKEN_EXPIRATION_MINUTES * 60 * 1000)
 
     try {
         const createdToken = await prisma.token.create({
@@ -38,6 +38,32 @@ router.post('/login', async (req, res) => {
 })
 
 router.post('/authenticate', async (req, res) => {
+    const { email, emailToken } = req.body
+
+    const dbEmailToken = await prisma.token.findUnique({
+        where: {
+            emailToken
+        },
+        include: {
+            user: true
+        }
+    })
+
+    if (!dbEmailToken || !dbEmailToken.valid) {
+        res.sendStatus(401)
+    }
+
+    if (dbEmailToken && dbEmailToken.expiration < new Date()) {
+        return res.status(401).json({error: 'Expired token'})
+    }
+
+    if (dbEmailToken && dbEmailToken.user.email != email) {
+        return res.sendStatus(401)
+    }
+
+    
+
+    res.sendStatus(200)
 
 })
 
